@@ -7,13 +7,14 @@ from cider.cider import Cider
 from spice.spice import Spice
 
 class COCOEvalCap:
-    def __init__(self, coco, cocoRes):
+    def __init__(self, coco, cocoRes, df):
         self.evalImgs = []
         self.eval = {}
         self.imgToEval = {}
         self.coco = coco
         self.cocoRes = cocoRes
         self.params = {'image_id': coco.getImgIds()}
+        self.df = df
 
     def evaluate(self):
         imgIds = self.params['image_id']
@@ -40,10 +41,9 @@ class COCOEvalCap:
             (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
             (Meteor(),"METEOR"),
             (Rouge(), "ROUGE_L"),
-            (Cider(), "CIDEr"),
+            (Cider(df=self.df), "CIDEr"),
             (Spice(), "SPICE")
         ]
-
         # =================================================
         # Compute scores
         # =================================================

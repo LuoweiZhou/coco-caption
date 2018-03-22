@@ -3,11 +3,19 @@
 # Ramakrishna Vedantam <vrama91@vt.edu>
 
 import copy
+import sys
+
+# Use cPickle if it is installed, as it is much faster
+if 'cPickle' in sys.modules:
+    import cPickle as pickle
+else:
+    import pickle
+
 from collections import defaultdict
 import numpy as np
-import pdb
 import math
-
+import os
+import pdb
 def precook(s, n=4, out=False):
     """
     Takes a string as input and returns an object that can be given to
@@ -101,9 +109,8 @@ class CiderScorer(object):
             # refs, k ref captions of one image
             for ngram in set([ngram for ref in refs for (ngram,count) in ref.iteritems()]):
                 self.document_frequency[ngram] += 1
-            # maxcounts[ngram] = max(maxcounts.get(ngram,0), count)
 
-    def compute_cider(self):
+    def compute_cider(self, df_mode = "corpus"):
         def counts2vec(cnts):
             """
             Function maps counts of ngram to vector of tfidf weights.
@@ -159,7 +166,8 @@ class CiderScorer(object):
             return val
 
         # compute log reference length
-        self.ref_len = np.log(float(len(self.crefs)))
+        if df_mode == "corpus":
+            self.ref_len = np.log(float(len(self.crefs)))
 
         scores = []
         for test, refs in zip(self.ctest, self.crefs):
@@ -180,13 +188,27 @@ class CiderScorer(object):
             scores.append(score_avg)
         return scores
 
-    def compute_score(self, option=None, verbose=0):
+    def compute_score(self, df_mode, option=None, verbose=0):
         # compute idf
-        self.compute_doc_freq()
-        # assert to check document frequency
-        assert(len(self.ctest) >= max(self.document_frequency.values()))
+        if df_mode == "corpus":
+            self.compute_doc_freq()
+            # pdb.set_trace()
+            # docFreq = {}
+            # docFreq['df'] = self.document_frequency
+            # docFreq['ref_len'] = len(self.crefs)
+            # pickle.dump(docFreq, open('noc_test_freq.p', 'w'))
+            # pdb.set_trace()
+            # assert to check document frequency
+            assert(len(self.ctest) >= max(self.document_frequency.values()))
+        else:
+            docFreq = pickle.load(open(os.path.join('tools/coco-caption/data', \
+                                                        df_mode + '.p'), 'r'))
+            self.document_frequency = docFreq['df']
+            # TODO: make this a part of coco-val-df
+            self.ref_len = np.log(float(docFreq['ref_len']))
+
         # compute cider score
-        score = self.compute_cider()
+        score = self.compute_cider(df_mode)
         # debug
         # print score
         return np.mean(np.array(score)), np.array(score)
