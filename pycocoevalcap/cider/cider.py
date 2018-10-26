@@ -7,14 +7,10 @@
 #
 # Authors: Ramakrishna Vedantam <vrama91@vt.edu> and Tsung-Yi Lin <tl483@cornell.edu>
 
-from cider_scorer import CiderScorer
-import pdb
+from .cider_scorer import CiderScorer
 
-class Cider:
-    """
-    Main Class to compute the CIDEr metric
-
-    """
+class Cider(object):
+    """Main Class to compute the CIDEr metric"""
     def __init__(self, df, test=None, refs=None, n=4, sigma=6.0):
         # set cider to sum over 1 to 4-grams
         self._n = n
@@ -29,7 +25,6 @@ class Cider:
                 ref_for_image (dict)  : dictionary with key <image> and value <tokenized reference sentence>
         :return: cider (float) : computed CIDEr score for the corpus
         """
-
         assert(gts.keys() == res.keys())
         imgIds = gts.keys()
 
